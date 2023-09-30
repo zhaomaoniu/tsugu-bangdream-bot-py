@@ -253,7 +253,7 @@ def match_servers(message: str) -> List[str]:
     servers = []
     for str_server in str_servers:
         if (server_id := get_server_id(str_server)) is not None:
-            servers.append(get_server_chinese_name(int(server_id)))
+            servers.append(server_id)
     return servers
 
 
