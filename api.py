@@ -221,7 +221,7 @@ def _main_server(
         return [
             {
                 "type": "string",
-                "string": f"默认服务器已改为 {', '.join([get_server_chinese_name(server) for server in servers])}",
+                "string": f"默认服务器已改为 {', '.join([get_server_chinese_name(int(server)) for server in servers])}",
             }
         ]
     return [
