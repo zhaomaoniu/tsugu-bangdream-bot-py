@@ -81,7 +81,8 @@ class UserDataStorage(JsonDataStorage):
     def __init__(self):
         super().__init__(User, Path.cwd() / "data" / "user.json")
         if not self.file_path.exists():
-            self.file_path.parent.mkdir()
+            if not self.file_path.parent.exists():
+                self.file_path.parent.mkdir()
             with open(self.file_path, "w", encoding="UTF-8") as file:
                 json.dump([], file, indent=4, ensure_ascii=False)
             self.data = []
