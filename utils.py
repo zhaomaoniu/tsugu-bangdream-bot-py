@@ -108,7 +108,7 @@ class UserDataStorage(JsonDataStorage):
             self.change_data(user_id, key, value)
 
         self.save_as_list(self.data)
-        return self.data[idx]
+        return self.get_data(user_id)
 
     def get_data(self, user_id: int) -> User:
         for data in self.data:
