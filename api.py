@@ -59,7 +59,7 @@ def _swc(
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if not message:
-        return None
+        return cmd_help_dict["swc"]
 
     args = message.split(maxsplit=1)
     status = args[0]  # on/off
@@ -112,6 +112,7 @@ def _player_status(
 ):
     server_id = int(get_server(message, user_storage, user_id)[1])
     server = get_server_name(server_id)
+    server_chinese_name = get_server_chinese_name(server_id)
 
     if (player_id := get_player_id(user_id, server)).isdigit():
         return get_data_from_backend(
@@ -123,12 +124,13 @@ def _player_status(
             },
         )
     elif isinstance(player_id, list):
+        # 获取错误提示
         return player_id
     else:
         return [
             {
                 "type": "string",
-                "string": "发送 绑定玩家 uid cn ·绑定国服\n发送 绑定玩家 uid jp ·绑定日服\n发送 绑定玩家 uid kr ·绑定韩服\n发送 绑定玩家 uid en ·绑定国际服\n发送 绑定玩家 uid tw ·绑定台服\n注意：客观存在通过聊天平台账号查询UID的风险，介意者慎绑，请不要绑定他人账号。",
+                "string": f"未在当前服务器: {server_chinese_name} 绑定过！\n{cmd_help_dict['绑定玩家']}",
             }
         ]
 
@@ -254,7 +256,9 @@ def _search_event(
     group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
-    return __std__("/searchEvent", message, user_id, user_storage)
+    if message != "":
+        return __std__("/searchEvent", message, user_id, user_storage)
+    return [{"type": "string", "string": cmd_help_dict["查活动"]}]
 
 
 def _search_song(
@@ -263,7 +267,9 @@ def _search_song(
     group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
-    return __std__("/searchSong", message, user_id, user_storage)
+    if message != "":
+        return __std__("/searchSong", message, user_id, user_storage)
+    return [{"type": "string", "string": cmd_help_dict["查曲"]}]
 
 
 def _search_card(
@@ -272,7 +278,9 @@ def _search_card(
     group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
-    return __std__("/searchCard", message, user_id, user_storage)
+    if message != "":
+        return __std__("/searchCard", message, user_id, user_storage)
+    return [{"type": "string", "string": cmd_help_dict["查卡"]}]
 
 
 def _song_meta(
@@ -302,7 +310,9 @@ def _get_card_illustration(
     group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
-    return get_data_from_backend("/getCardIllustration", {"cardId": message})
+    if message != "" and message.isdigit():
+        return get_data_from_backend("/getCardIllustration", {"cardId": message})
+    return [{"type": "string", "string": cmd_help_dict["查卡面"]}]
 
 
 def _search_character(
@@ -311,13 +321,15 @@ def _search_character(
     group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
-    return get_data_from_backend(
-        "/searchCharacter",
-        {
-            "default_servers": get_server(message, user_storage, user_id)[0],
-            "text": message,
-        },
-    )
+    if message != "":
+        return get_data_from_backend(
+            "/searchCharacter",
+            {
+                "default_servers": get_server(message, user_storage, user_id)[0],
+                "text": message,
+            },
+        )
+    return [{"type": "string", "string": cmd_help_dict["查角色"]}]
 
 
 def _search_gacha(
@@ -326,14 +338,16 @@ def _search_gacha(
     group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
-    return get_data_from_backend(
-        "/searchGacha",
-        {
-            "default_servers": get_server(message, user_storage, user_id)[0],
-            "useEasyBG": config.use_easy_bg,
-            "gachaId": message,
-        },
-    )
+    if message != "":
+        return get_data_from_backend(
+            "/searchGacha",
+            {
+                "default_servers": get_server(message, user_storage, user_id)[0],
+                "useEasyBG": config.use_easy_bg,
+                "gachaId": message,
+            },
+        )
+    return [{"type": "string", "string": cmd_help_dict["查卡池"]}]
 
 
 def _search_player(
@@ -452,6 +466,9 @@ def _song_chart(
     group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
+    if message == "":
+        return [{"type": "string", "string": cmd_help_dict["查谱面"]}]
+
     args = message.split()
 
     if not args[0].isdigit():
