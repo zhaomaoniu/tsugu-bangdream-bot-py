@@ -145,7 +145,7 @@ def _bind_player(
         return [
             {
                 "type": "string",
-                "string": "发送 绑定玩家 uid ·绑定国服\n发送 绑定玩家 jp uid ·绑定日服",
+                "string": cmd_help_dict["绑定玩家"],
             }
         ]
 
