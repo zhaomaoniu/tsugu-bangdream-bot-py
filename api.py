@@ -114,6 +114,9 @@ def _player_status(
     server = get_server_name(server_id)
     server_chinese_name = get_server_chinese_name(server_id)
 
+    if server is None:
+        return None
+
     if (player_id := get_player_id(user_id, server)).isdigit():
         return get_data_from_backend(
             "/searchPlayer",
