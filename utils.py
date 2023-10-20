@@ -1,5 +1,6 @@
 import json
 import re
+import inspect
 import requests
 from typing import Any, Dict, Union, List, Tuple
 from pathlib import Path
@@ -12,6 +13,7 @@ from .config import (
     language_mapping,
     chinese_language_mapping,
 )
+from .room import RoomStorage
 from .model import User
 
 
@@ -158,6 +160,21 @@ def get_api(message: str) -> Tuple[str, str]:
     return None
 
 
+def extra_args_handler(func):
+    def wrapper(*args, **kwargs):
+        # 获取原始函数的参数信息
+        func_argspec = inspect.getfullargspec(func)
+        func_args = func_argspec.args
+
+        # 提取原始函数的参数
+        func_kwargs = {arg: kwargs[arg] for arg in func_args if arg in kwargs}
+
+        result = func(**func_kwargs)  # 调用原始函数并传入原始参数
+        return result
+
+    return wrapper
+
+
 def remove_none_value(data: dict) -> dict:
     return {k: v for k, v in data.items() if v is not None}
 
@@ -213,13 +230,14 @@ def get_server(
     return data.servers, data.present_server
 
 
-def post_car(message: str, user_id: int) -> int:
+def post_car(message: str, user_id: int, room_storage: RoomStorage) -> int:
     car_id = message[:6]
 
     if not car_id.isdigit() and car_id[:5].isdigit():
         car_id = car_id[:5]
 
     url = f"https://api.bandoristation.com/index.php?function=submit_room_number&number={car_id}&user_id={user_id}&raw_message={message}&source={config.token_name}&token={config.bandori_station_token}"
+    room_storage.add_room(car_id, user_id, message, config.token_name)
     return requests.get(url).status_code
 
 

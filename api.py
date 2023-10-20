@@ -1,6 +1,5 @@
 import json
-import requests
-from typing import Callable, Optional, Any, Dict, List, TYPE_CHECKING
+from typing import Callable, Optional, Dict, List, TYPE_CHECKING
 
 from .config import (
     cmd_help_dict,
@@ -19,21 +18,16 @@ from .utils import (
     bind_player_id,
     remove_none_value,
     insert_value_and_remove_duplicates,
+    extra_args_handler,
 )
+from .room import RoomStorage
 
 if TYPE_CHECKING:
     from .utils import UserDataStorage
 
 
-# 以下函数的 `message` 参数须替换指令名为空并使用.strip()方法
-
-
-def _help(
-    message: Optional[str] = None,
-    user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
-    user_storage: Optional["UserDataStorage"] = None,
-):
+@extra_args_handler
+def _help(message: Optional[str] = None):
     if not message:
         result = "\n>> ".join(cmd_help_dict.keys())  # 用换行连接不同键对应的值
         result = f"当前可用的 Tsugu 指令有：\n>> {result}\n发送 {message}+指令 查看帮助"
@@ -52,11 +46,11 @@ def _help(
         ]
 
 
+@extra_args_handler
 def _swc(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
     group_id: Optional[int] = -1,
-    user_storage: Optional["UserDataStorage"] = None,
 ):
     if not message:
         return cmd_help_dict["swc"]
@@ -104,10 +98,10 @@ def _swc(
         ]
 
 
+@extra_args_handler
 def _player_status(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     server_id = int(get_server(message, user_storage, user_id)[1])
@@ -138,10 +132,10 @@ def _player_status(
         ]
 
 
+@extra_args_handler
 def _bind_player(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if not message:
@@ -164,10 +158,9 @@ def _bind_player(
         ]
 
 
+@extra_args_handler
 def _bd_station_on_personal(
-    message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     user_storage.change_data(user_id, "car_send", True)
@@ -179,10 +172,9 @@ def _bd_station_on_personal(
     ]
 
 
+@extra_args_handler
 def _bd_station_off_personal(
-    message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     user_storage.change_data(user_id, "car_send", False)
@@ -194,10 +186,10 @@ def _bd_station_off_personal(
     ]
 
 
+@extra_args_handler
 def _set_mode(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if (server_id := get_server_id(message)) is not None:
@@ -215,10 +207,10 @@ def _set_mode(
     return None
 
 
+@extra_args_handler
 def _main_server(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if servers := match_servers(message):
@@ -237,6 +229,7 @@ def _main_server(
     ]
 
 
+@extra_args_handler
 def __std__(
     api: str,
     message: Optional[str],
@@ -253,10 +246,10 @@ def __std__(
     )
 
 
+@extra_args_handler
 def _search_event(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if message != "":
@@ -264,10 +257,10 @@ def _search_event(
     return [{"type": "string", "string": cmd_help_dict["查活动"]}]
 
 
+@extra_args_handler
 def _search_song(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if message != "":
@@ -275,10 +268,10 @@ def _search_song(
     return [{"type": "string", "string": cmd_help_dict["查曲"]}]
 
 
+@extra_args_handler
 def _search_card(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if message != "":
@@ -286,10 +279,10 @@ def _search_card(
     return [{"type": "string", "string": cmd_help_dict["查卡"]}]
 
 
+@extra_args_handler
 def _song_meta(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if get_server_id(message) is None and message != "":
@@ -307,21 +300,17 @@ def _song_meta(
     )
 
 
-def _get_card_illustration(
-    message: Optional[str] = None,
-    user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
-    user_storage: Optional["UserDataStorage"] = None,
-):
+@extra_args_handler
+def _get_card_illustration(message: Optional[str] = None):
     if message != "" and message.isdigit():
         return get_data_from_backend("/getCardIllustration", {"cardId": message})
     return [{"type": "string", "string": cmd_help_dict["查卡面"]}]
 
 
+@extra_args_handler
 def _search_character(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if message != "":
@@ -335,10 +324,10 @@ def _search_character(
     return [{"type": "string", "string": cmd_help_dict["查角色"]}]
 
 
+@extra_args_handler
 def _search_gacha(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if message != "":
@@ -353,10 +342,10 @@ def _search_gacha(
     return [{"type": "string", "string": cmd_help_dict["查卡池"]}]
 
 
+@extra_args_handler
 def _search_player(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if (player_id := match_player_id(message)) is not None:
@@ -371,11 +360,10 @@ def _search_player(
         )
 
 
-# FEATURE: lsycx [tier] [event_id?] [server?]
+@extra_args_handler
 def _lsycx(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     args = message.split()
@@ -406,11 +394,10 @@ def _lsycx(
     )
 
 
-# FEATURE: ycxall [event_id?] [server?]
+@extra_args_handler
 def _ycx_all(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     args = message.split()
@@ -428,11 +415,10 @@ def _ycx_all(
     )
 
 
-# FEATURE: ycx [tier] [event_id?] [server?]
+@extra_args_handler
 def _ycx(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     args = message.split()
@@ -463,10 +449,10 @@ def _ycx(
     )
 
 
+@extra_args_handler
 def _song_chart(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
     user_storage: Optional["UserDataStorage"] = None,
 ):
     if message == "":
@@ -487,6 +473,7 @@ def _song_chart(
     )
 
 
+@extra_args_handler
 def _gacha_simulate(
     message: Optional[str] = None,
     user_id: Optional[int] = -1,
@@ -514,40 +501,13 @@ def _gacha_simulate(
     )
 
 
-def _room_list(
-    message: Optional[str] = None,
-    user_id: Optional[int] = -1,
-    group_id: Optional[int] = -1,
-    user_storage: Optional["UserDataStorage"] = None,
-):
+@extra_args_handler
+def _room_list(message: Optional[str] = None, room_storage: RoomStorage = None):
     if message != "":
         # 无参数指令
         return None
 
-    response = requests.get(
-        "https://api.bandoristation.com/?function=query_room_number",
-    )
-    response.raise_for_status()
-    response_json: dict = response.json()
-    response_list: List[Dict[str, Any]] = response_json.get("response", [])
-
-    room_dict = {}  # 用于存储最新时间的字典
-
-    # 遍历原始列表，更新每个"number"对应的最新时间戳
-    for item in response_list:
-        number = int(item.get("number", 0))
-        time = item["time"]
-        if number not in room_dict or time > room_dict.get(number)["time"]:
-            room_dict[number] = {
-                "number": number,
-                "rawMessage": item.get("raw_message", ""),
-                "source": item.get("source_info", {}).get("name", ""),
-                "userId": str(item.get("user_info", {}).get("user_id", "")),
-                "time": time,
-                "avanter": item.get("user_info", {}).get("avatar", None),
-                "userName": item.get("user_info", {}).get("username", "Bob"),
-            }
-    room_list = list(room_dict.values())
+    room_list = room_storage.export()
 
     if room_list == []:
         return [{"type": "string", "string": "myc"}]
@@ -556,7 +516,8 @@ def _room_list(
 
 
 HANDLERS: Dict[
-    str, Callable[[str, int, int, "UserDataStorage"], List[Dict[str, str]]]
+    str,
+    Callable[[str, int, int, "UserDataStorage", "RoomStorage"], List[Dict[str, str]]],
 ] = {
     "Help": _help,
     "Swc": _swc,
