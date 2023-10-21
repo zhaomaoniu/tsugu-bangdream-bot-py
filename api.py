@@ -229,7 +229,6 @@ def _main_server(
     ]
 
 
-@extra_args_handler
 def __std__(
     api: str,
     message: Optional[str],
